@@ -1,12 +1,21 @@
 import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.input.MouseEvent;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
 
 public class VyshyvankaApp extends Application {
 
@@ -21,6 +30,16 @@ public class VyshyvankaApp extends Application {
 
     // Color of drawing
     public Color[][] grid;
+    private static final Color[] PALETTE = {
+            Color.web("#8B1A1A"), // dark red
+            Color.web("#FF4500"), // orange red
+            Color.web("#228B22"), // forest green
+            Color.web("#1E90FF"), // dodger blue
+            Color.web("#FFD700"), // gold
+            Color.web("#800080"), // purple
+            Color.web("#00CED1"), // dark turquoise
+            Color.web("#FF69B4")  // hot pink
+    };
     private Color selectedColor = Color.web("#8B1A1A");
     private boolean eraseMode = false;
     // Canvas drawing variables
@@ -33,8 +52,8 @@ public class VyshyvankaApp extends Application {
     public void start(Stage stage) throws Exception {
         stage.setTitle("Vyshyvanka | Author: Mokliak Vyacheslav");
         grid = new Color[rows][cols];
-        stage.setWidth(1000);
-        stage.setHeight(700);
+        stage.setWidth(1200);
+        stage.setHeight(830);
         stage.setResizable(false);
 
         BorderPane root = new BorderPane();
@@ -42,6 +61,11 @@ public class VyshyvankaApp extends Application {
         stage.setScene(scene);
 
 
+        root.setCenter(buildCanvasPane());
+        root.setTop(buildToolbar());
+        root.setCenter(buildCanvasPane());
+        root.setTop(buildToolbar());
+        root.setLeft(buildPalette());
         root.setCenter(buildCanvasPane());
         stage.setScene(scene);
         stage.show();
@@ -119,6 +143,91 @@ public class VyshyvankaApp extends Application {
             }
             case NONE  -> {}
         }
+    }
+
+    private HBox buildToolbar() {
+        HBox bar = new HBox(8);
+        bar.setPadding(new Insets(8, 12, 8, 12));
+        bar.setAlignment(Pos.CENTER_LEFT);
+
+        Button btnNew = new Button("Новий");
+        btnNew.setOnAction(e -> {
+            grid = new Color[rows][cols];
+            redraw();
+        });
+
+        Button btnGenName = new Button("Ім'я");
+        btnGenName.setOnAction(e -> {
+            grid = new Color[rows][cols];
+            redraw();
+            // generateName() — додамо пізніше
+        });
+
+        // симетрія
+        ToggleGroup tgSym = new ToggleGroup();
+
+        ToggleButton tbNone  = new ToggleButton("Немає");
+        ToggleButton tbHoriz = new ToggleButton("↔");
+        ToggleButton tbVert  = new ToggleButton("↕");
+        ToggleButton tbBoth  = new ToggleButton("✦");
+
+        tbNone.setToggleGroup(tgSym);
+        tbHoriz.setToggleGroup(tgSym);
+        tbVert.setToggleGroup(tgSym);
+        tbBoth.setToggleGroup(tgSym);
+        tbNone.setSelected(true);
+
+        tbNone.setOnAction(e  -> symMode = SymMode.NONE);
+        tbHoriz.setOnAction(e -> symMode = SymMode.HORIZONTAL);
+        tbVert.setOnAction(e  -> symMode = SymMode.VERTICAL);
+        tbBoth.setOnAction(e  -> symMode = SymMode.BOTH);
+
+        ToggleButton tbErase = new ToggleButton("Гумка");
+        tbErase.setOnAction(e -> eraseMode = tbErase.isSelected());
+
+        bar.getChildren().addAll(
+                btnNew, btnGenName,
+                new Separator(),
+                new Label("Симетрія:"),
+                tbNone, tbHoriz, tbVert, tbBoth,
+                new Separator(),
+                tbErase
+        );
+
+        return bar;
+    }
+
+    private VBox buildPalette() {
+        VBox panel = new VBox(8);
+        panel.setPadding(new Insets(12, 10, 12, 10));
+        panel.setAlignment(Pos.TOP_CENTER);
+
+        Label lb1 = new Label("Colors");
+        Rectangle preview = new Rectangle(36, 36, selectedColor);
+
+        GridPane swatches  = new GridPane();
+        swatches.setHgap(4);
+        swatches.setVgap(4);
+
+        for(int i = 0; i < PALETTE.length; i++){
+            Color c = PALETTE[i];
+            Rectangle r = new Rectangle(22, 22, c);
+            r.setOnMouseClicked(e -> {
+                selectedColor = c;
+                preview.setFill(c);
+                eraseMode = false;
+            });
+
+            swatches.add(r, i % 2, i / 2);
+        }
+        ColorPicker picker = new ColorPicker(selectedColor);
+        picker.setOnAction(e -> {
+            selectedColor = picker.getValue();
+            preview.setFill(selectedColor);
+        });
+
+        panel.getChildren().addAll(lb1, preview, swatches, new Separator(), picker);
+        return panel;
     }
 
     public static void main(String[] args) {
