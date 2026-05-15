@@ -11,8 +11,12 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.scene.input.MouseEvent;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.WritableImage;
+import javafx.stage.FileChooser;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
@@ -21,8 +25,8 @@ public class VyshyvankaApp extends Application {
 
     // size of single cell size; default amounts of rows and colons
     private static final int CELL_SIZE = 20;
-    private static final int DEFAULT_COLS = 40;
-    private static final int DEFAULT_ROWS = 30;
+    private static final int DEFAULT_COLS = 41;
+    private static final int DEFAULT_ROWS = 31;
 
     // size of drawing window is changeable, so we need another variables
     private int cols = DEFAULT_COLS;
@@ -46,10 +50,13 @@ public class VyshyvankaApp extends Application {
     private Canvas canvas;
     private GraphicsContext gc;
 
+    private Stage primaryStage;
+
     private SymMode symMode = SymMode.NONE;
 
     @Override
     public void start(Stage stage) throws Exception {
+        this.primaryStage = stage;
         stage.setTitle("Vyshyvanka | Author: Mokliak Vyacheslav");
         grid = new Color[rows][cols];
         stage.setWidth(1200);
@@ -162,6 +169,8 @@ public class VyshyvankaApp extends Application {
             redraw();
             // generateName() — додамо пізніше
         });
+        Button btnSave = new Button("Зберегти");
+        btnSave.setOnAction(e -> savePNG());
 
         // симетрія
         ToggleGroup tgSym = new ToggleGroup();
@@ -191,7 +200,8 @@ public class VyshyvankaApp extends Application {
                 new Label("Симетрія:"),
                 tbNone, tbHoriz, tbVert, tbBoth,
                 new Separator(),
-                tbErase
+                tbErase,
+                btnSave
         );
 
         return bar;
@@ -228,6 +238,23 @@ public class VyshyvankaApp extends Application {
 
         panel.getChildren().addAll(lb1, preview, swatches, new Separator(), picker);
         return panel;
+    }
+
+    private void savePNG() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Save as PNG");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Image", "*.png"));
+        fc.setInitialFileName("vyshyvanka.png");
+        File f = fc.showSaveDialog(primaryStage);
+        if (f == null) return;
+
+        WritableImage img = new WritableImage((int) canvas.getWidth(), (int) canvas.getHeight());
+        canvas.snapshot(null, img);
+        try{
+            ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", f);
+        } catch (IOException e) {
+            System.out.println("Error saving image to PNG: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) {
