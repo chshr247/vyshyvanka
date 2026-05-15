@@ -22,9 +22,12 @@ public class VyshyvankaApp extends Application {
     // Color of drawing
     public Color[][] grid;
     private Color selectedColor = Color.web("#8B1A1A");
+    private boolean eraseMode = false;
     // Canvas drawing variables
     private Canvas canvas;
     private GraphicsContext gc;
+
+    private SymMode symMode = SymMode.NONE;
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -93,9 +96,29 @@ public class VyshyvankaApp extends Application {
         int r = (int)(my / CELL_SIZE);
 
         if (c < 0 || c >= cols || r < 0 || r >= rows) return;
-
-        grid[r][c] = selectedColor;
+        Color paint = eraseMode ? null : selectedColor;
+        applyWithSymmetry(r, c, paint);
         redraw();
+    }
+
+    private void paintCell(int r, int c, Color color) {
+        if (r < 0 || r >= rows || c < 0 || c >= cols) return;
+        grid[r][c] = color;
+    }
+
+    private void applyWithSymmetry(int r, int c, Color color){
+        paintCell(r, c, color);
+
+        switch (symMode) {
+            case HORIZONTAL -> paintCell(r, cols - 1 - c, color);
+            case VERTICAL -> paintCell(rows - 1 - r, c, color);
+            case BOTH -> {
+                paintCell(r, cols - 1 - c, color);
+                paintCell(rows - 1 - r, c, color);
+                paintCell(rows - 1 - r, cols - 1 - c, color);
+            }
+            case NONE  -> {}
+        }
     }
 
     public static void main(String[] args) {
