@@ -15,6 +15,7 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.WritableImage;
 import javafx.stage.FileChooser;
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javafx.scene.control.*;
@@ -76,8 +77,8 @@ public class VyshyvankaApp extends Application {
         root.setCenter(buildCanvasPane());
         stage.setScene(scene);
         stage.show();
-
         redraw();
+        loadPNG("images/viacheslav.png");
     }
 
     private StackPane buildCanvasPane() {
@@ -254,6 +255,41 @@ public class VyshyvankaApp extends Application {
             ImageIO.write(SwingFXUtils.fromFXImage(img, null), "png", f);
         } catch (IOException e) {
             System.out.println("Error saving image to PNG: " + e.getMessage());
+        }
+    }
+
+    private void loadPNG(String path) {
+        try{
+            BufferedImage bi = ImageIO.read(new File(path));
+            if (bi == null) return;
+
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    int px = c * CELL_SIZE + CELL_SIZE / 2;
+                    int py = r * CELL_SIZE + CELL_SIZE / 2;
+
+                    if (px < bi.getWidth() && py < bi.getHeight()) {
+                        int rgb = bi.getRGB(px, py);
+                        int red = (rgb >> 16) & 0xFF;
+                        int green = (rgb >> 8) & 0xFF;
+                        int blue = (rgb) & 0xFF;
+                        int alpha = (rgb >> 24) & 0xFF;
+
+                        if (alpha > 10) {
+                            Color col = Color.rgb(red, green, blue);
+                            double brightness = col.getRed() * 0.299
+                                    + col.getGreen() * 0.587
+                                    + col.getBlue() * 0.114;
+                            if (brightness < 0.85) {
+                                grid[r][c] = col;
+                            }
+                        }
+                    }
+                }
+            }
+            redraw();
+        } catch (IOException e){
+            System.out.println("Error loading PNG: " + e.getMessage());
         }
     }
 
