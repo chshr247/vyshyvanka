@@ -18,6 +18,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
+
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.shape.Rectangle;
@@ -169,6 +171,9 @@ public class VyshyvankaApp extends Application {
             grid = new Color[rows][cols];
             redraw();
         });
+        Button btnSize = new Button("Розмір");
+        btnSize.setOnAction(e -> resizeCanva());
+
         Button btnOpen = new Button("Відкрити");
         btnOpen.setOnAction(e -> OpenPNG());
 
@@ -198,7 +203,7 @@ public class VyshyvankaApp extends Application {
         tbErase.setOnAction(e -> eraseMode = tbErase.isSelected());
 
         bar.getChildren().addAll(
-                btnNew, btnGenName,
+                btnNew, btnGenName, btnSize,
                 new Separator(),
                 new Label("Симетрія:"),
                 tbNone, tbHoriz, tbVert, tbBoth,
@@ -209,6 +214,49 @@ public class VyshyvankaApp extends Application {
         );
 
         return bar;
+    }
+
+    private void resizeCanva() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Розмір сітки");
+        dialog.setHeaderText("Введіть кількість колонок і рядків");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextField tfCols = new TextField(String.valueOf(cols));
+        TextField tfRows = new TextField(String.valueOf(rows));
+
+        GridPane gp = new GridPane();
+        gp.setHgap(10);
+        gp.setVgap(10);
+        gp.setPadding(new Insets(12));
+        gp.add(new Label("Колонки (5–100):"), 0, 0);
+        gp.add(tfCols, 1, 0);
+        gp.add(new Label("Рядки (5–100):"), 0, 1);
+        gp.add(tfRows, 1, 1);
+
+        dialog.getDialogPane().setContent(gp);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+
+        try {
+            int newCols = Integer.parseInt(tfCols.getText().trim());
+            int newRows = Integer.parseInt(tfRows.getText().trim());
+            newCols = Math.max(5, Math.min(100, newCols));
+            newRows = Math.max(5, Math.min(100, newRows));
+
+            cols = newCols;
+            rows = newRows;
+            grid = new Color[rows][cols];
+
+            canvas.setWidth(cols * CELL_SIZE + 1);
+            canvas.setHeight(rows * CELL_SIZE + 1);
+            gc = canvas.getGraphicsContext2D();
+
+            redraw();
+        } catch (NumberFormatException ex) {
+            new Alert(Alert.AlertType.ERROR, "Введіть коректні числа").showAndWait();
+        }
     }
 
     private void OpenPNG() {
