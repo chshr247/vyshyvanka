@@ -173,6 +173,22 @@
     -fx-border-color: #9B1C26;
 }
 
+/* ── Color swatches ── */
+.color-swatch {
+    -fx-cursor: hand;
+}
+
+.color-swatch:hover {
+    -fx-scale-x: 1.08;
+    -fx-scale-y: 1.08;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 6, 0, 0, 1);
+}
+
+.color-swatch:pressed {
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
 /* ── Separator ── */
 .separator .line {
     -fx-border-color: rgba(0,0,0,0.06);

@@ -177,7 +177,28 @@ public class VyshyvankaApp extends Application {
         btnNew.setOnAction(e -> { grid = new Color[rows][cols]; redraw(); });
         btnOpen.setOnAction(e -> openPNG());
         btnTile.setOnAction(e -> showTileDialog());
-        btnGenName.setOnAction(e -> { grid = new Color[rows][cols]; redraw(); loadPNG("images/viacheslav.png"); });
+        btnGenName.setOnAction(e -> {
+            File dir = new File("images");
+            File[] pngs = dir.listFiles((d, n) -> n.endsWith(".png"));
+            if (pngs == null || pngs.length == 0) {
+                new Alert(Alert.AlertType.INFORMATION, "Немає файлів у папці images").showAndWait();
+                return;
+            }
+
+            ChoiceDialog<String> dialog = new ChoiceDialog<>();
+            for (File f : pngs)
+                dialog.getItems().add(f.getName().replace(".png", ""));
+            dialog.setSelectedItem(dialog.getItems().get(0));
+            dialog.setTitle("Генерація за іменем");
+            dialog.setHeaderText("Оберіть ім'я");
+            dialog.setContentText("Ім'я:");
+
+            dialog.showAndWait().ifPresent(selected -> {
+                grid = new Color[rows][cols];
+                loadPNG("images/" + selected + ".png");
+            });
+        });
+
         btnSave.setOnAction(e -> savePNG());
 
         btnNew.getStyleClass().add("btn-ghost");
@@ -244,6 +265,7 @@ public class VyshyvankaApp extends Application {
             Rectangle r = new Rectangle(28, 28, c);
             r.setArcWidth(6);
             r.setArcHeight(6);
+            r.getStyleClass().add("color-swatch");
             r.setOnMouseClicked(e -> {
                 selectedColor = c;
                 preview.setFill(c);
