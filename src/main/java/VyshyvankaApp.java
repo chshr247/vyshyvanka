@@ -168,8 +168,10 @@ public class VyshyvankaApp extends Application {
         btnGenName.setOnAction(e -> {
             grid = new Color[rows][cols];
             redraw();
-            // generateName() — додамо пізніше
         });
+        Button btnOpen = new Button("Відкрити");
+        btnOpen.setOnAction(e -> OpenPNG());
+
         Button btnSave = new Button("Зберегти");
         btnSave.setOnAction(e -> savePNG());
 
@@ -202,10 +204,21 @@ public class VyshyvankaApp extends Application {
                 tbNone, tbHoriz, tbVert, tbBoth,
                 new Separator(),
                 tbErase,
+                btnOpen,
                 btnSave
         );
 
         return bar;
+    }
+
+    private void OpenPNG() {
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Відкрити схему PNG");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Image", "*.png"));
+        File f = fc.showOpenDialog(primaryStage);
+        if (f == null) return;
+        grid = new Color[rows][cols];
+        loadPNG(f.getAbsolutePath());
     }
 
     private VBox buildPalette() {
