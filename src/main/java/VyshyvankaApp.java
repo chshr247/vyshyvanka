@@ -35,6 +35,9 @@ public class VyshyvankaApp extends Application {
     private int cols = DEFAULT_COLS;
     private int rows = DEFAULT_ROWS;
 
+    private int tileW = 10;
+    private int tileH = 10;
+
     // Color of drawing
     public Color[][] grid;
     private static final Color[] PALETTE = {
@@ -71,9 +74,6 @@ public class VyshyvankaApp extends Application {
         stage.setScene(scene);
 
 
-        root.setCenter(buildCanvasPane());
-        root.setTop(buildToolbar());
-        root.setCenter(buildCanvasPane());
         root.setTop(buildToolbar());
         root.setLeft(buildPalette());
         root.setCenter(buildCanvasPane());
@@ -170,6 +170,7 @@ public class VyshyvankaApp extends Application {
         btnGenName.setOnAction(e -> {
             grid = new Color[rows][cols];
             redraw();
+            loadPNG("images/viacheslav.png");
         });
         Button btnSize = new Button("Розмір");
         btnSize.setOnAction(e -> resizeCanva());
@@ -202,6 +203,9 @@ public class VyshyvankaApp extends Application {
         ToggleButton tbErase = new ToggleButton("Гумка");
         tbErase.setOnAction(e -> eraseMode = tbErase.isSelected());
 
+        Button btnTile = new Button("Дублювати");
+        btnTile.setOnAction(e -> showTileDialog());
+
         bar.getChildren().addAll(
                 btnNew, btnGenName, btnSize,
                 new Separator(),
@@ -210,10 +214,43 @@ public class VyshyvankaApp extends Application {
                 new Separator(),
                 tbErase,
                 btnOpen,
-                btnSave
+                btnSave,
+                btnTile
         );
 
         return bar;
+    }
+
+    private void showTileDialog() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Дублювання фрагменту");
+        dialog.setHeaderText("Розмір базового фрагменту (лівий верхній кут)");
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        TextField tfW = new TextField(String.valueOf(tileW));
+        TextField tfH = new TextField(String.valueOf(tileH));
+
+        GridPane gp = new GridPane();
+        gp.setHgap(10);
+        gp.setVgap(10);
+        gp.setPadding(new Insets(12));
+        gp.add(new Label("Ширина фрагменту:"), 0, 0);
+        gp.add(tfW, 1, 0);
+        gp.add(new Label("Висота фрагменту:"), 0, 1);
+        gp.add(tfH, 1, 1);
+
+        dialog.getDialogPane().setContent(gp);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+
+        try {
+            tileW = Math.max(1, Math.min(cols, Integer.parseInt(tfW.getText().trim())));
+            tileH = Math.max(1, Math.min(rows, Integer.parseInt(tfH.getText().trim())));
+            tilePattern();
+        } catch (NumberFormatException ex) {
+            new Alert(Alert.AlertType.ERROR, "Введіть коректні числа").showAndWait();
+        }
     }
 
     private void resizeCanva() {
@@ -352,6 +389,19 @@ public class VyshyvankaApp extends Application {
         } catch (IOException e){
             System.out.println("Error loading PNG: " + e.getMessage());
         }
+    }
+
+    private void tilePattern() {
+        Color[][] fragment = new Color[tileH][tileW];
+        for (int r = 0; r < tileH && r < rows; r++)
+            for (int c = 0; c < tileW && c < cols; c++)
+                fragment[r][c] = grid[r][c];
+
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                grid[r][c] = fragment[r % tileH][c % tileW];
+
+        redraw();
     }
 
     public static void main(String[] args) {
