@@ -334,7 +334,7 @@ public class VyshyvankaApp extends Application {
                 tfRows.setText(String.valueOf(rows));
                 redraw();
             } catch (NumberFormatException ex) {
-                new Alert(Alert.AlertType.ERROR, "Введіть коректні числа").showAndWait();
+                new Alert(Alert.AlertType.ERROR).showAndWait();
             }
         });
 
@@ -356,7 +356,8 @@ public class VyshyvankaApp extends Application {
     private void showTileDialog() {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Дублювання фрагменту");
-        dialog.setHeaderText("Розмір базового фрагменту (лівий верхній кут)");
+        dialog.setHeaderText("Симетрія: " + symMode.name().toLowerCase()
+                + "\nФрагмент (лівий верхній кут) буде продубльовано з поточною симетрією");
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         TextField tfW = new TextField(String.valueOf(tileW));
@@ -450,9 +451,30 @@ public class VyshyvankaApp extends Application {
             for (int c = 0; c < tileW && c < cols; c++)
                 fragment[r][c] = grid[r][c];
 
-        for (int r = 0; r < rows; r++)
-            for (int c = 0; c < cols; c++)
-                grid[r][c] = fragment[r % tileH][c % tileW];
+        for (int r = 0; r < rows; r++) {
+            int tileRow = r / tileH;
+            int localR = r % tileH;
+            for (int c = 0; c < cols; c++) {
+                int tileCol = c / tileW;
+                int localC = c % tileW;
+
+                boolean flipH = false;
+                boolean flipV = false;
+                switch (symMode) {
+                    case HORIZONTAL -> flipH = (tileCol % 2 == 1);
+                    case VERTICAL   -> flipV = (tileRow % 2 == 1);
+                    case BOTH -> {
+                        flipH = (tileCol % 2 == 1);
+                        flipV = (tileRow % 2 == 1);
+                    }
+                    case NONE -> {}
+                }
+
+                int srcR = flipV ? (tileH - 1 - localR) : localR;
+                int srcC = flipH ? (tileW - 1 - localC) : localC;
+                grid[r][c] = fragment[srcR][srcC];
+            }
+        }
 
         redraw();
     }
