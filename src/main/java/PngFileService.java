@@ -36,29 +36,64 @@ public class PngFileService implements IPngService {
             
             for (int r = 0; r < gridModel.getRows(); r++) {
                 for (int c = 0; c < gridModel.getCols(); c++) {
-                    int px = c * CELL_SIZE + CELL_SIZE / 2;
-                    int py = r * CELL_SIZE + CELL_SIZE / 2;
+                    int px = c * CELL_SIZE + CELL_SIZE / 4;
+                    int py = r * CELL_SIZE + CELL_SIZE / 4;
                     
-                    if (px < bi.getWidth() && py < bi.getHeight()) {
-                        int rgb = bi.getRGB(px, py);
-                        int red = (rgb >> 16) & 0xFF;
-                        int green = (rgb >> 8) & 0xFF;
-                        int blue = (rgb) & 0xFF;
-                        int alpha = (rgb >> 24) & 0xFF;
-                        
-                        if (alpha > 10) {
-                            Color col = Color.rgb(red, green, blue);
-                            double brightness = colorService.calculateBrightness(col);
-                            if (brightness < 0.85) {
-                                gridModel.paintCell(r, c, col);
-                            }
-                        }
+                    Color col = sampleAverageColor(bi, px, py, 3);
+                    if (col == null) {
+                        continue;
+                    }
+
+                    double brightness = colorService.calculateBrightness(col);
+                    if (brightness < 0.85) {
+                        gridModel.paintCell(r, c, col);
                     }
                 }
             }
         } catch (IOException e) {
             System.out.println("Error loading PNG: " + e.getMessage());
         }
+    }
+    
+    private Color sampleAverageColor(BufferedImage image, int centerX, int centerY, int size) {
+        int half = size / 2;
+        int sumR = 0;
+        int sumG = 0;
+        int sumB = 0;
+        int count = 0;
+
+        for (int dy = -half; dy <= half; dy++) {
+            int y = centerY + dy;
+            if (y < 0 || y >= image.getHeight()) {
+                continue;
+            }
+            for (int dx = -half; dx <= half; dx++) {
+                int x = centerX + dx;
+                if (x < 0 || x >= image.getWidth()) {
+                    continue;
+                }
+
+                int rgb = image.getRGB(x, y);
+                int alpha = (rgb >> 24) & 0xFF;
+                if (alpha <= 10) {
+                    continue;
+                }
+
+                sumR += (rgb >> 16) & 0xFF;
+                sumG += (rgb >> 8) & 0xFF;
+                sumB += rgb & 0xFF;
+                count++;
+            }
+        }
+
+        if (count == 0) {
+            return null;
+        }
+
+        int avgR = sumR / count;
+        int avgG = sumG / count;
+        int avgB = sumB / count;
+        return Color.rgb(avgR, avgG, avgB);
     }
     
     @Override
@@ -72,4 +107,3 @@ public class PngFileService implements IPngService {
         }
     }
 }
-
