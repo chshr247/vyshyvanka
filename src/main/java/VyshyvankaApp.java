@@ -2,6 +2,9 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -51,6 +54,14 @@ public class VyshyvankaApp extends Application {
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root);
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("styles.css")).toExternalForm());
+        scene.getAccelerators().put(
+                new KeyCodeCombination(KeyCode.Z, KeyCombination.SHORTCUT_DOWN),
+                drawingController::undo
+        );
+        scene.getAccelerators().put(
+                new KeyCodeCombination(KeyCode.Y, KeyCombination.SHORTCUT_DOWN),
+                drawingController::redo
+        );
 
         root.setTop(toolbarUI.getToolbar());
         root.setLeft(palettePanel.getPanel());
@@ -88,7 +99,10 @@ public class VyshyvankaApp extends Application {
 
     private void setupEventHandlers() {
         // Toolbar event handlers
+        toolbarUI.setOnUndoPressed(drawingController::undo);
+        toolbarUI.setOnRedoPressed(drawingController::redo);
         toolbarUI.setOnNewPressed(() -> {
+            drawingController.captureStateForUndo();
             gridModel.clearGrid();
             canvasRenderer.redraw();
         });
@@ -114,8 +128,12 @@ public class VyshyvankaApp extends Application {
         canvasRenderer.setCanvas(canvas);
         pngService = new PngFileService(gridModel, canvas, colorService);
 
-        canvas.setOnMousePressed((MouseEvent e) -> drawingController.handleDraw(e.getX(), e.getY()));
+        canvas.setOnMousePressed((MouseEvent e) -> {
+            drawingController.beginStroke();
+            drawingController.handleDraw(e.getX(), e.getY());
+        });
         canvas.setOnMouseDragged((MouseEvent e) -> drawingController.handleDraw(e.getX(), e.getY()));
+        canvas.setOnMouseReleased((MouseEvent e) -> drawingController.endStroke());
 
         StackPane pane = new StackPane(canvas);
         pane.setStyle("-fx-background-color: #f7f6f9; -fx-background-radius: 16;");
@@ -130,6 +148,7 @@ public class VyshyvankaApp extends Application {
         }
 
         int[] dimensions = result.get();
+        drawingController.captureStateForUndo();
         tileService.tilePattern(dimensions[0], dimensions[1]);
         canvasRenderer.redraw();
     }
@@ -140,6 +159,7 @@ public class VyshyvankaApp extends Application {
             return;
         }
 
+        drawingController.captureStateForUndo();
         gridModel.clearGrid();
         canvasRenderer.redraw();
         pngService.loadPNG("images/" + selected.get() + ".png");
@@ -155,6 +175,7 @@ public class VyshyvankaApp extends Application {
             return;
         }
 
+        drawingController.captureStateForUndo();
         gridModel.clearGrid();
         pngService.loadPNG(f.getAbsolutePath());
         canvasRenderer.redraw();
@@ -178,6 +199,7 @@ public class VyshyvankaApp extends Application {
             int newCols = Math.max(5, Math.min(MAX_COLS, palettePanel.getGridCols()));
             int newRows = Math.max(5, Math.min(MAX_ROWS, palettePanel.getGridRows()));
 
+            drawingController.captureStateForUndo();
             gridModel.resizeGrid(newRows, newCols);
             canvas.setWidth(newCols * CELL_SIZE + 1);
             canvas.setHeight(newRows * CELL_SIZE + 1);

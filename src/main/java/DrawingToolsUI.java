@@ -13,12 +13,16 @@ import javafx.scene.layout.Region;
 public class DrawingToolsUI {
     
     private HBox toolbar;
+    private Button btnUndo;
+    private Button btnRedo;
     private Button btnNew;
     private Button btnOpen;
     private Button btnTile;
     private Button btnGenerateName;
     private Button btnSave;
     
+    private Runnable onUndoPressed;
+    private Runnable onRedoPressed;
     private Runnable onNewPressed;
     private Runnable onOpenPressed;
     private Runnable onTilePressed;
@@ -45,18 +49,32 @@ public class DrawingToolsUI {
         HBox left = new HBox(10, logo, title);
         left.setAlignment(Pos.CENTER_LEFT);
         
+        btnUndo = new Button("Undo");
+        btnRedo = new Button("Redo");
         btnNew = new Button("New");
         btnOpen = new Button("Open File");
         btnTile = new Button("Tile");
         btnGenerateName = new Button("Generate Name");
         btnSave = new Button("Save as PNG");
         
+        btnUndo.getStyleClass().add("btn-ghost");
+        btnRedo.getStyleClass().add("btn-ghost");
         btnNew.getStyleClass().add("btn-ghost");
         btnOpen.getStyleClass().add("btn-ghost");
         btnTile.getStyleClass().add("btn-ghost");
         btnGenerateName.getStyleClass().add("btn-ghost");
         btnSave.getStyleClass().add("btn-primary");
         
+        btnUndo.setOnMousePressed(e -> {
+            if (onUndoPressed != null) {
+                onUndoPressed.run();
+            }
+        });
+        btnRedo.setOnMousePressed(e -> {
+            if (onRedoPressed != null) {
+                onRedoPressed.run();
+            }
+        });
         btnNew.setOnAction(e -> {
             if (onNewPressed != null) {
                 onNewPressed.run();
@@ -83,7 +101,7 @@ public class DrawingToolsUI {
             }
         });
         
-        HBox right = new HBox(4, btnNew, btnOpen, btnTile, btnGenerateName, btnSave);
+        HBox right = new HBox(4, btnUndo, btnRedo, btnNew, btnOpen, btnTile, btnGenerateName, btnSave);
         right.setAlignment(Pos.CENTER_RIGHT);
         
         Region spacer = new Region();
@@ -115,5 +133,12 @@ public class DrawingToolsUI {
     public void setOnSavePressed(Runnable handler) {
         this.onSavePressed = handler;
     }
-}
 
+    public void setOnUndoPressed(Runnable handler) {
+        this.onUndoPressed = handler;
+    }
+
+    public void setOnRedoPressed(Runnable handler) {
+        this.onRedoPressed = handler;
+    }
+}
