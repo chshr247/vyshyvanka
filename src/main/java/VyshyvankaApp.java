@@ -72,7 +72,7 @@ public class VyshyvankaApp extends Application {
         stage.setScene(scene);
         stage.show();
         canvasRenderer.redraw();
-        pngService.loadPNG("images/viacheslav.png");
+        pngService.loadPNG("images/Вячеслав.png");
         canvasRenderer.redraw();
     }
 

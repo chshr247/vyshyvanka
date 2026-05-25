@@ -8,7 +8,7 @@ public class ColorService {
     
     private static final Color[] PALETTE = {
             Color.web("#8B1A1A"),
-            Color.web("#FF4500"),
+            Color.web("#000000"),
             Color.web("#228B22"),
             Color.web("#1E90FF"),
             Color.web("#FFD700"),
